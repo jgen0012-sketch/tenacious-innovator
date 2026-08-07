@@ -1,0 +1,59 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches:
+      - main        # 推送到 main → 部署到生产域名
+      - staging     # 推送到 staging → 部署到预览域名
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    name: Deploy (${{ github.ref_name }})
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # 生产环境构建（main 分支）
+      - name: Build (Production)
+        if: github.ref_name == 'main'
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL_PROD }}
+          VITE_APP_ENV: production
+
+      # 预览环境构建（staging 分支）
+      - name: Build (Staging)
+        if: github.ref_name == 'staging'
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL_STAGING }}
+          VITE_APP_ENV: staging
+
+      # 部署到生产 Cloudflare Pages 项目
+      - name: Deploy to Cloudflare Pages (Production)
+        if: github.ref_name == 'main'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=sensorypath --branch=main
+
+      # 部署到预览 Cloudflare Pages 项目
+      - name: Deploy to Cloudflare Pages (Staging)
+        if: github.ref_name == 'staging'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=sensorypath-staging --branch=staging

@@ -1,0 +1,17 @@
+name = "sensorypath"
+compatibility_date = "2026-01-01"
+
+# Cloudflare Pages 配置（通过 Cloudflare Dashboard 创建两个 Pages 项目）
+# 项目 1（生产）: sensorypath          → 绑定自定义域名 sensorypath.pages.dev 或自定义域
+# 项目 2（预览）: sensorypath-staging  → 绑定 staging.sensorypath.pages.dev
+
+[build]
+command = "npm run build"
+output_directory = "dist"
+
+[env.production]
+# 在 Cloudflare Dashboard → Settings → Environment Variables 中配置：
+# VITE_API_BASE_URL = https://api.sensorypath.com
+
+[env.staging]
+# VITE_API_BASE_URL = https://api-staging.sensorypath.com
