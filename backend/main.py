@@ -132,3 +132,36 @@ async def get_minute_counts():
     """
     result = await fetch_live_counts()
     return result
+
+# City of Melbourne open data - sensor locations
+COM_SENSORS_URL = (
+    "https://data.melbourne.vic.gov.au/api/explore/v2.1/catalog/datasets/"
+    "pedestrian-counting-system-sensor-locations/records"
+)
+
+
+@app.get("/pedestrian/sensors")
+async def get_sensors():
+    """
+    Return active pedestrian sensor locations (id, name, coordinates)
+    from City of Melbourne open data. Used to map counts to real places.
+    """
+    params = {"limit": 100, "where": "status='A'"}
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(COM_SENSORS_URL, params=params)
+        resp.raise_for_status()
+        records = resp.json().get("results", [])
+    except Exception:
+        raise HTTPException(status_code=502, detail="Sensor location service unavailable")
+
+    return [
+        {
+            "locationId": r.get("location_id"),
+            "name": r.get("sensor_description"),
+            "lat": r.get("latitude"),
+            "lng": r.get("longitude"),
+            "status": r.get("status"),
+        }
+        for r in records
+    ]
