@@ -1,31 +1,31 @@
 # SensoryPath 🧭
 
-> A personalised, sensory-aware itinerary app for neurodivergent commuters in Melbourne CBD.
+> A personalised, sensory-aware itinerary app for neurodivergent commuters in Melbourne CBD.  
 > FIT5120 TE08 — Monash University
 
 ---
 
-## 快速开始（本地运行）
+## Getting Started (Local Development)
 
-### 前提条件
+### Prerequisites
 
-请确保你的电脑已安装以下工具：
+Make sure you have the following installed on your machine:
 
-- [Node.js](https://nodejs.org/) **v18 或以上版本**（推荐 v20）
-- npm（随 Node.js 自动安装）
+- [Node.js](https://nodejs.org/) **v18 or above** (v20 recommended)
+- npm (comes with Node.js)
 - Git
 
-可以在终端运行以下命令检查版本：
+Run the following commands to check your versions:
 
 ```bash
-node -v    # 应显示 v18.x.x 或以上
-npm -v     # 应显示 9.x.x 或以上
+node -v       # should show v18.x.x or above
+npm -v        # should show 9.x.x or above
 git --version
 ```
 
 ---
 
-### 第一步：克隆仓库
+### Step 1: Clone the Repository
 
 ```bash
 git clone -b Geng https://github.com/jgen0012-sketch/tenacious-innovator.git
@@ -34,53 +34,53 @@ cd tenacious-innovator
 
 ---
 
-### 第二步：安装依赖
+### Step 2: Install Dependencies
 
 ```bash
 npm install
 ```
 
-> 安装完成后，`node_modules` 文件夹会自动生成，大约需要 15–30 秒。
+> This will generate the `node_modules` folder automatically. It takes about 15–30 seconds.
 
 ---
 
-### 第三步：配置环境变量（必须）
+### Step 3: Set Up Environment Variables (Required)
 
-项目使用 Mock 数据在没有后端的情况下正常运行。需要在项目**根目录**新建一个 `.env.local` 文件：
+The project uses mock data so it works without a backend. You need to create a `.env.local` file in the **project root** (same level as `package.json`).
 
-**方法一：手动创建**
+**Option A — Create the file manually**
 
-在项目根目录（和 `package.json` 同级）新建文件 `.env.local`，内容如下：
+Create a new file called `.env.local` and paste the following:
 
 ```
 VITE_USE_MOCK=true
 VITE_API_BASE_URL=http://localhost:8080
 ```
 
-**方法二：命令行创建（Mac/Linux）**
+**Option B — Create via terminal (Mac/Linux)**
 
 ```bash
 echo "VITE_USE_MOCK=true" > .env.local
 echo "VITE_API_BASE_URL=http://localhost:8080" >> .env.local
 ```
 
-**方法二：命令行创建（Windows PowerShell）**
+**Option B — Create via terminal (Windows PowerShell)**
 
 ```powershell
 "VITE_USE_MOCK=true`nVITE_API_BASE_URL=http://localhost:8080" | Out-File -FilePath .env.local -Encoding utf8
 ```
 
-> ⚠️ 注意：`.env.local` 文件不会被提交到 Git（已在 `.gitignore` 中忽略），每个人 pull 下来都需要自己创建这个文件。
+> ⚠️ Note: `.env.local` is listed in `.gitignore` and will never be committed to Git. Every team member needs to create this file locally after cloning.
 
 ---
 
-### 第四步：启动开发服务器
+### Step 4: Start the Development Server
 
 ```bash
 npm run dev
 ```
 
-启动成功后，终端会显示：
+Once started, you should see:
 
 ```
 VITE v8.x.x  ready in xxx ms
@@ -88,58 +88,58 @@ VITE v8.x.x  ready in xxx ms
   ➜  Local:   http://localhost:5173/
 ```
 
-打开浏览器访问 **http://localhost:5173** 即可看到项目。
+Open your browser and go to **http://localhost:5173**.
 
 ---
 
-### 常见问题
+### Troubleshooting
 
-**Q：启动后地图不显示或页面空白？**
-A：检查 `.env.local` 文件是否存在，且内容中 `VITE_USE_MOCK=true` 是否正确。
+**Map not showing / blank page?**  
+Check that `.env.local` exists in the project root and contains `VITE_USE_MOCK=true`.
 
-**Q：`npm install` 报错？**
-A：尝试删除 `node_modules` 文件夹和 `package-lock.json`，然后重新运行 `npm install`。
+**`npm install` fails?**  
+Delete the `node_modules` folder and `package-lock.json`, then run `npm install` again.
 
-**Q：端口 5173 被占用？**
-A：Vite 会自动切换到 5174、5175 等，注意看终端输出的实际地址。
-
----
-
-## 页面导航
-
-| 页面 | 地址 | 功能描述 |
-|------|------|----------|
-| 首页 | `/` | Google Maps 风格全屏地图，显示 8 个传感器实时人流密度（🟢🟡🔴） |
-| 实时地图 | `/map` | 全屏 Leaflet 地图，左侧列出所有传感器状态 |
-| 路线规划 | `/route` | 输入起终点，返回 3 条不同感官强度的路线 |
-| 安静空间 | `/refuges` | 附近公园、图书馆、咖啡馆等低感官场所推荐 |
-| 我的偏好 | `/profile` | 设置个人感官阈值、步行距离、提醒开关 |
+**Port 5173 already in use?**  
+Vite automatically switches to 5174, 5175, etc. Check the terminal output for the actual URL.
 
 ---
 
-## 项目结构
+## Pages & Features
+
+| Page | Route | Description |
+|------|-------|-------------|
+| Home | `/` | Google Maps-style full-screen map with 8 live crowd sensors (🟢🟡🔴) |
+| Live Map | `/map` | Full-screen Leaflet map with sensor status sidebar |
+| Plan Route | `/route` | Enter origin and destination, get 3 routes ranked by sensory intensity |
+| Quiet Spaces | `/refuges` | Nearby parks, libraries, cafes and other low-sensory refuges |
+| My Profile | `/profile` | Configure personal sensory thresholds, walking distance and alerts |
+
+---
+
+## Project Structure
 
 ```
 src/
-├── api/                  # API 接口层
-│   ├── client.js         # Axios 实例（含 JWT 拦截）
-│   ├── pedestrian.js     # 行人计数系统接口
-│   ├── landmarks.js      # 地标/兴趣点接口
-│   ├── routes.js         # 路线规划接口
-│   ├── user.js           # 用户账户接口
-│   └── mockData.js       # 本地 Mock 数据（开发用）
+├── api/                  # API interface layer
+│   ├── client.js         # Axios instance (with JWT interceptor)
+│   ├── pedestrian.js     # Pedestrian counting system API
+│   ├── landmarks.js      # Landmarks and places of interest API
+│   ├── routes.js         # Route planning API
+│   ├── user.js           # User account API
+│   └── mockData.js       # Local mock data (for development)
 ├── components/
-│   ├── common/           # NavBar、Footer、CrowdBadge
-│   ├── map/              # LeafletMap 可复用地图组件
-│   ├── route/            # RouteCard、SensoryIndicator
+│   ├── common/           # NavBar, Footer, CrowdBadge
+│   ├── map/              # LeafletMap reusable map component
+│   ├── route/            # RouteCard, SensoryIndicator
 │   └── refuge/           # RefugeCard
-├── stores/               # Pinia 状态管理
+├── stores/               # Pinia state management
 │   ├── usePedestrianStore.js
 │   ├── useRouteStore.js
 │   ├── useLandmarkStore.js
 │   └── useUserStore.js
-├── router/               # Vue Router 路由配置
-├── views/                # 5 个页面视图
+├── router/               # Vue Router config
+├── views/                # 5 page views
 │   ├── HomeView.vue
 │   ├── MapView.vue
 │   ├── RouteView.vue
@@ -153,92 +153,93 @@ src/
 
 ## Tech Stack
 
-| 层级 | 技术 |
-|------|------|
-| 前端框架 | Vue 3 + Vite |
-| 路由 | Vue Router 4 |
-| 状态管理 | Pinia |
-| 地图 | Leaflet |
-| HTTP 请求 | Axios |
-| 部署 | Cloudflare Pages |
+| Layer | Technology |
+|-------|-----------|
+| Frontend Framework | Vue 3 + Vite |
+| Routing | Vue Router 4 |
+| State Management | Pinia |
+| Map | Leaflet (CartoDB Voyager tiles — free, no API key required) |
+| HTTP Client | Axios |
+| Deployment | Cloudflare Pages |
 | CI/CD | GitHub Actions |
 
 ---
 
-## 后端 API 接口说明
+## Backend API Reference
 
-> 当 `VITE_USE_MOCK=false` 时，前端会请求真实后端。以下是后端需要实现的接口：
+> When `VITE_USE_MOCK=false`, the frontend will call the real backend. Below are the endpoints the backend needs to implement.
 
-### 行人计数（Pedestrian）
+### Pedestrian
 
-| Method | Path | 描述 |
-|--------|------|------|
-| GET | `/pedestrian/sensors` | 获取所有传感器位置 |
-| GET | `/pedestrian/counts/minute` | 获取每分钟实时人流数据（每 15 分钟刷新） |
-| GET | `/pedestrian/counts/hour` | 获取每小时人流数据 |
-| GET | `/pedestrian/sensors/:id/history` | 获取传感器历史数据 |
-| GET | `/pedestrian/crowd-level` | 获取某区域当前拥挤度评分 |
-| GET | `/pedestrian/forecast` | 获取未来 1 小时预测人流 |
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/pedestrian/sensors` | Get all sensor locations |
+| GET | `/pedestrian/counts/minute` | Get live per-minute pedestrian counts (refreshed every 15 min) |
+| GET | `/pedestrian/counts/hour` | Get hourly pedestrian counts |
+| GET | `/pedestrian/sensors/:id/history` | Get historical data for a sensor |
+| GET | `/pedestrian/crowd-level` | Get crowd score for a given area |
+| GET | `/pedestrian/forecast` | Get 1-hour ahead crowd forecast |
 
-### 地标（Landmarks）
+### Landmarks
 
-| Method | Path | 描述 |
-|--------|------|------|
-| GET | `/landmarks` | 获取所有地标 |
-| GET | `/landmarks/refuges/nearby` | 获取附近安静空间 |
-| GET | `/landmarks/:id` | 获取地标详情 |
-| GET | `/landmarks/types` | 获取地标类型列表 |
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/landmarks` | Get all landmarks |
+| GET | `/landmarks/refuges/nearby` | Get nearby quiet spaces |
+| GET | `/landmarks/:id` | Get landmark detail |
+| GET | `/landmarks/types` | Get list of landmark types |
 
-### 路线（Routes）
+### Routes
 
-| Method | Path | 描述 |
-|--------|------|------|
-| POST | `/routes/pedestrian` | 规划感官友好路线 |
-| GET | `/routes/:id/crowd` | 获取路线沿途人群数据 |
-| POST | `/routes/alternative` | 获取替代路线（人流超出阈值时） |
-| GET | `/routes/geocode` | 地址转坐标 |
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/routes/pedestrian` | Plan a sensory-friendly route |
+| GET | `/routes/:id/crowd` | Get crowd data along a route |
+| POST | `/routes/alternative` | Get alternative route when crowd threshold exceeded |
+| GET | `/routes/geocode` | Convert address to coordinates |
 
-### 用户（Users）
+### Users
 
-| Method | Path | 描述 |
-|--------|------|------|
-| POST | `/users/register` | 注册 |
-| POST | `/users/login` | 登录，返回 JWT |
-| GET | `/users/me` | 获取当前用户信息 |
-| PUT | `/users/me/preferences` | 更新感官偏好设置 |
-| GET | `/users/me/history` | 获取历史路线记录 |
-| POST | `/users/me/saved-refuges` | 收藏避难场所 |
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/users/register` | Register a new account |
+| POST | `/users/login` | Login and receive JWT token |
+| GET | `/users/me` | Get current user profile |
+| PUT | `/users/me/preferences` | Update sensory preferences |
+| GET | `/users/me/history` | Get route history |
+| POST | `/users/me/saved-refuges` | Save a refuge to favourites |
 
 ---
 
-## Cloudflare Pages 部署
+## Cloudflare Pages Deployment
 
-项目配置了两个独立的 Cloudflare Pages 环境：
+The project is deployed using two separate Cloudflare Pages environments:
 
-| 环境 | CF 项目名 | GitHub 分支 | 域名 |
-|------|-----------|-------------|------|
-| 生产 | `sensorypath` | `main` | `sensorypath.pages.dev` |
-| 预览 | `sensorypath-staging` | `staging` | `sensorypath-staging.pages.dev` |
+| Environment | CF Project Name | GitHub Branch | URL |
+|-------------|----------------|---------------|-----|
+| Production | `sensorypath` | `Geng` | `sensorypath-eoc.pages.dev` |
+| Staging | `sensorypath-staging` | `staging` | `sensorypath-staging.pages.dev` |
 
-### 部署步骤
+### Deployment Steps
 
-1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com)
-2. 进入 **Workers & Pages** → **Create application** → **Pages**
-3. 点击 **Connect to Git** → 选择 `jgen0012-sketch/tenacious-innovator`
-4. 分支选择 `Geng`（或 `main`）
-5. 填写 Build 配置：
+1. Log in to [Cloudflare Dashboard](https://dash.cloudflare.com)
+2. Go to **Workers & Pages** → **Create application** → **Pages**
+3. Click **Connect to Git** → select `jgen0012-sketch/tenacious-innovator`
+4. Set the branch to `Geng`
+5. Fill in build settings:
    - **Build command**: `npm run build`
    - **Build output directory**: `dist`
-6. 在 **Environment Variables** 中添加：
-   - `VITE_USE_MOCK` = `false`（生产环境使用真实 API）
-   - `VITE_API_BASE_URL` = 后端真实地址
-7. 点击 **Save and Deploy**
+6. Add environment variable:
+   - `VITE_USE_MOCK` = `true`
+7. Click **Save and Deploy**
+
+Every push to the `Geng` branch will trigger an automatic redeploy.
 
 ---
 
-## 数据来源
+## Data Sources
 
-- [行人计数系统 – 传感器位置](https://data.melbourne.vic.gov.au)
-- [行人计数系统 – 每分钟数据](https://data.melbourne.vic.gov.au)
-- [行人计数系统 – 每小时数据](https://data.melbourne.vic.gov.au)
-- [地标与兴趣点数据](https://data.melbourne.vic.gov.au)
+- [Pedestrian Counting System – Sensor Locations](https://data.melbourne.vic.gov.au)
+- [Pedestrian Counting System – Past Hour (counts per minute)](https://data.melbourne.vic.gov.au)
+- [Pedestrian Counting System – Past Hour (counts per hour)](https://data.melbourne.vic.gov.au)
+- [Landmarks and Places of Interest](https://data.melbourne.vic.gov.au)
