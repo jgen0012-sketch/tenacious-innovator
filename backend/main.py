@@ -10,12 +10,12 @@ import httpx
 app = FastAPI(
     title="SensoryPath API",
     description="Backend for sensory-aware navigation in Melbourne CBD",
-    version="0.2.0",
+    version="0.3.0",
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # tighten to real domains before production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -23,21 +23,19 @@ app.add_middleware(
 
 MELB_VIEWBOX = "144.94,-37.82,144.98,-37.80"
 
-# --- Melbourne CBD sensor locations (matches frontend mockData) ---
-# TODO: replace with live data from the team database once available.
-SENSORS = [
-    {"sensorId": 1, "name": "Bourke St Mall (North)",      "lat": -37.8132, "lng": 144.9653, "status": "active"},
-    {"sensorId": 2, "name": "Flinders St Station",         "lat": -37.8183, "lng": 144.9671, "status": "active"},
-    {"sensorId": 3, "name": "Swanston St / Collins St",    "lat": -37.8143, "lng": 144.9669, "status": "active"},
-    {"sensorId": 4, "name": "Melbourne Central",           "lat": -37.8101, "lng": 144.9631, "status": "active"},
-    {"sensorId": 5, "name": "Federation Square",           "lat": -37.8179, "lng": 144.9691, "status": "active"},
-    {"sensorId": 6, "name": "Queen Victoria Market",       "lat": -37.8072, "lng": 144.9568, "status": "active"},
-    {"sensorId": 7, "name": "Lygon St / Carlton",          "lat": -37.7990, "lng": 144.9667, "status": "active"},
-    {"sensorId": 8, "name": "Docklands / Waterfront City", "lat": -37.8145, "lng": 144.9481, "status": "active"},
-]
+# City of Melbourne open data - per-minute pedestrian counts (past hour)
+COM_MINUTE_URL = (
+    "https://data.melbourne.vic.gov.au/api/explore/v2.1/catalog/datasets/"
+    "pedestrian-counting-system-past-hour-counts-per-minute/records"
+)
 
-# Sample live-ish minute counts per sensor (placeholder until DB is connected)
-SAMPLE_COUNTS = {1: 72, 2: 95, 3: 18, 4: 41, 5: 63, 6: 12, 7: 8, 8: 29}
+# Fallback data used if the open data API is unavailable
+FALLBACK_COUNTS = [
+    {"locationId": 39, "count": 5},
+    {"locationId": 40, "count": 8},
+    {"locationId": 1, "count": 20},
+    {"locationId": 2, "count": 45},
+]
 
 
 def count_to_level(count: int) -> str:
@@ -49,10 +47,60 @@ def count_to_level(count: int) -> str:
     return "high"
 
 
+async def fetch_live_counts():
+    """
+    Fetch the latest per-minute pedestrian count for each sensor from the
+    City of Melbourne open data API. Returns a list of
+    { locationId, count, level, timestamp }.
+    Falls back to sample data if the API is unavailable.
+    """
+    params = {"limit": 100, "order_by": "sensing_datetime DESC"}
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(COM_MINUTE_URL, params=params)
+        resp.raise_for_status()
+        records = resp.json().get("results", [])
+    except Exception:
+        # API failed - degrade gracefully with fallback data
+        now = datetime.now(timezone.utc).isoformat()
+        return {
+            "source": "fallback",
+            "data": [
+                {
+                    "locationId": r["locationId"],
+                    "count": r["count"],
+                    "level": count_to_level(r["count"]),
+                    "timestamp": now,
+                }
+                for r in FALLBACK_COUNTS
+            ],
+        }
+
+    # Keep only the most recent record per location_id
+    latest = {}
+    for rec in records:
+        loc = rec.get("location_id")
+        if loc is None:
+            continue
+        if loc not in latest:  # records are DESC, so first seen = newest
+            latest[loc] = rec
+
+    data = [
+        {
+            "locationId": loc,
+            "count": rec.get("total_of_directions", 0),
+            "level": count_to_level(rec.get("total_of_directions", 0)),
+            "timestamp": rec.get("sensing_datetime"),
+        }
+        for loc, rec in latest.items()
+    ]
+    return {"source": "live", "data": data}
+
+
 @app.get("/")
 def health_check():
     """Health check so we can confirm the service is running."""
-    return {"status": "ok", "service": "SensoryPath API", "version": "0.2.0"}
+    return {"status": "ok", "service": "SensoryPath API", "version": "0.3.0"}
 
 
 @app.get("/routes/geocode")
@@ -60,17 +108,14 @@ async def geocode(address: str = Query(..., min_length=1)):
     """Convert a text address into map coordinates (OpenStreetMap Nominatim)."""
     url = "https://nominatim.openstreetmap.org/search"
     params = {"q": address, "format": "json", "limit": 1, "viewbox": MELB_VIEWBOX, "bounded": 0}
-    headers = {"User-Agent": "SensoryPath/0.2 (Monash FIT5120 student project)"}
-
+    headers = {"User-Agent": "SensoryPath/0.3 (Monash FIT5120 student project)"}
     async with httpx.AsyncClient(timeout=10) as client:
         resp = await client.get(url, params=params, headers=headers)
-
     if resp.status_code != 200:
         raise HTTPException(status_code=502, detail="Geocoding service error")
     results = resp.json()
     if not results:
         raise HTTPException(status_code=404, detail="Address not found")
-
     top = results[0]
     return {
         "lat": float(top["lat"]),
@@ -79,26 +124,11 @@ async def geocode(address: str = Query(..., min_length=1)):
     }
 
 
-@app.get("/pedestrian/sensors")
-def get_sensors():
-    """Return all pedestrian sensor locations in the Melbourne CBD."""
-    return SENSORS
-
-
 @app.get("/pedestrian/counts/minute")
-def get_minute_counts():
+async def get_minute_counts():
     """
     Return the latest per-minute pedestrian count for each sensor,
-    with a derived crowd level (low / moderate / high).
+    from City of Melbourne live open data, with a derived crowd level.
     """
-    now = datetime.now(timezone.utc).isoformat()
-    return [
-        {
-            "sensorId": s["sensorId"],
-            "name": s["name"],
-            "timestamp": now,
-            "count": SAMPLE_COUNTS.get(s["sensorId"], 0),
-            "level": count_to_level(SAMPLE_COUNTS.get(s["sensorId"], 0)),
-        }
-        for s in SENSORS
-    ]
+    result = await fetch_live_counts()
+    return result
